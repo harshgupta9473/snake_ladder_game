@@ -2,7 +2,7 @@ package packets
 
 type Packet struct {
 	Header struct {
-		UserId     string `json: "user_id"`
+		UserId     string `json:"user_id"`
 		RequestType string `json:"request_type"`
 	} `json:"header"`
 	Payload interface{} `json:"payload"`

@@ -15,7 +15,6 @@ type User struct {
 
 type Player struct {
 	UserID   string
-	Index    int
 	Location int
 	Name     string
 }
@@ -30,7 +29,6 @@ type Game struct {
 	WonBy          string
 	WhooseTurn     string
 	PlayerMap      map[string]*Player
-	Ended          bool
-	DiceType       int // 0 for normal and 1 for crooked
+	DiceType       int // 0 for normal, 1 for crooked
 	SnakeAndLadder map[int]int
 }

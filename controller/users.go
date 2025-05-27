@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"snake_ladder/intf"
 	"snake_ladder/models"
@@ -19,24 +20,29 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func WebsocketHandler(svc intf.UserServiceIntf, mm intf.MatchMakingServiceIntf,gs intf.GameServiceIntf) http.HandlerFunc {
+func WebsocketHandler(svc intf.UserServiceIntf, mm intf.MatchMakingServiceIntf, gs intf.GameServiceIntf) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req models.UserConnRequest
-		err:=json.NewDecoder(r.Body).Decode(&req)
-		if err!=nil{
-			http.Error(w,"wrong format",http.StatusBadRequest)
+		userID := r.URL.Query().Get("id")
+		name := r.URL.Query().Get("name")
+
+		if userID == "" || name == "" {
+			http.Error(w, "wrong format", http.StatusBadRequest)
+			log.Println("Missing id or name")
 			return
 		}
+		req.ID = userID
+		req.Name = name
 		ws, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			fmt.Println("Error upgrading: ", err)
+			log.Println(err)
 			return
 		}
-		defer ws.Close()
-		
-		
+		// defer ws.Close()
+
 		conn := transport.NewConnection(ws)
-		
+
 		svc.Connect(req.ID, req.Name, conn)
 		conn.Start()
 
@@ -48,9 +54,9 @@ func WebsocketHandler(svc intf.UserServiceIntf, mm intf.MatchMakingServiceIntf,g
 
 					switch msg.Header.RequestType {
 					case "jg":
-						JoinGameHandler(msg,mm,gs)
+						JoinGameHandler(msg, mm, gs)
 					case "pt":
-						PlayGameHandler(msg,gs)	
+						PlayGameHandler(msg, gs)
 					}
 					// case: for done channel or graceful shutdown
 				}
@@ -59,15 +65,52 @@ func WebsocketHandler(svc intf.UserServiceIntf, mm intf.MatchMakingServiceIntf,g
 	}
 }
 
-func JoinGameHandler(packet *packets.Packet,mm intf.MatchMakingServiceIntf,gs intf.GameServiceIntf) {
-	joined,status:=mm.StartMatch(packet.Header.UserId, packet.Payload.(packets.JoinGame).DiceType)
-	if joined{
-		gs.BroadCastGameUpdate(status.GameID,status,"game_started")
+func JoinGameHandler(packet *packets.Packet, mm intf.MatchMakingServiceIntf, gs intf.GameServiceIntf) {
+	payloadBytes, err := json.Marshal(packet.Payload)
+	if err != nil {
+		fmt.Println("Error marshaling payload:", err)
+		return
+	}
+
+	var join packets.JoinGame
+	err = json.Unmarshal(payloadBytes, &join)
+	if err != nil {
+		fmt.Println("Error unmarshaling to JoinGame:", err)
+		return
+	}
+
+	joined, status := mm.StartMatch(packet.Header.UserId, join.DiceType)
+	if joined {
+		gs.BroadCastGameUpdate(status.GameID, status, "game_started")
 	}
 }
 
-func PlayGameHandler(packet *packets.Packet,gs intf.GameServiceIntf){
-	status:=gs.PlayTurn(packet.Payload.(packets.PlayTurn).GameID,packet.Header.UserId)
-	gs.BroadCastGameUpdate(status.GameID,status,"game_played")
+func PlayGameHandler(packet *packets.Packet, gs intf.GameServiceIntf) {
+	payloadBytes, err := json.Marshal(packet.Payload)
+	if err != nil {
+		fmt.Println("Error marshaling payload:", err)
+		return
+	}
+
+	var playgame packets.PlayTurn
+	err = json.Unmarshal(payloadBytes, &playgame)
+	if err != nil {
+		fmt.Println("Error unmarshaling to JoinGame:", err)
+		return
+	}
+
+	status := gs.PlayTurn(playgame.GameID, packet.Header.UserId)
+	gs.BroadCastGameUpdate(status.GameID, status, "game_played")
 }
 
+
+
+// {
+//     "header":{
+//         "user_id":"harsh9473",
+//         "request_type":"jg"
+//     },
+//     "payload":{
+//         "dice_type":0
+//     }
+// }

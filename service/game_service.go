@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"snake_ladder/intf"
 	"snake_ladder/packets"
 	"snake_ladder/utils"
@@ -20,20 +21,24 @@ func NewGameService(gameRepo intf.GameRepositoryIntf, userServiec intf.UserServi
 	}
 }
 
-func (gs *GameService) CreateGame(userID string, dicetype int)*packets.UpdatePayloadGameStatus {
+func (gs *GameService) CreateGame(userID string, dicetype int) *packets.UpdatePayloadGameStatus {
 	gameID := uuid.New().String()
 	gs.GameRepo.CreateGame(gameID, userID, dicetype)
 	return gs.gameStatusPlayload(gameID)
 }
 
-func (gs *GameService) JoinGameByGameID(gameID string, userID string)*packets.UpdatePayloadGameStatus {
+func (gs *GameService) JoinGameByGameID(gameID string, userID string) *packets.UpdatePayloadGameStatus {
 	gs.GameRepo.JoinGameByGameID(gameID, userID)
-	return gs.gameStatusPlayload(gameID)
+	status := gs.gameStatusPlayload(gameID)
+	log.Println(status)
+	return status
 }
 
-func (gs *GameService) PlayTurn(gameID string, userID string) *packets.UpdatePayloadGameStatus{
+func (gs *GameService) PlayTurn(gameID string, userID string) *packets.UpdatePayloadGameStatus {
 	gs.GameRepo.PlayTurn(gameID, userID)
-	return gs.gameStatusPlayload(gameID)
+	status := gs.gameStatusPlayload(gameID)
+	log.Println(status)
+	return status
 }
 
 func (gs *GameService) BroadCastGameUpdate(gameID string, payload interface{}, packet_type string) {
@@ -45,10 +50,10 @@ func (gs *GameService) BroadCastGameUpdate(gameID string, payload interface{}, p
 	}
 }
 
-func (gs *GameService) CreateandJoin(userID1 string, userID2 string, dicetype int) *packets.UpdatePayloadGameStatus{
+func (gs *GameService) CreateandJoin(userID1 string, userID2 string, dicetype int) *packets.UpdatePayloadGameStatus {
 	gameID := uuid.New().String()
 	gs.GameRepo.CreateandJoinTwoPlayer(userID1, userID2, gameID, dicetype)
-	gameStatus:=gs.gameStatusPlayload(gameID)
+	gameStatus := gs.gameStatusPlayload(gameID)
 	return gameStatus
 }
 

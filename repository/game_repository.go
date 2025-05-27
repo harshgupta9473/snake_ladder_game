@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"log"
 	"math/rand"
 	"snake_ladder/intf"
 	"snake_ladder/models"
@@ -36,8 +37,11 @@ func (g *GameRepo) CreateGame(gameID string, userID string, dicetype int) {
 		Players:  []*models.Player{},
 		Turn:     0,
 		PlayerMap: make(map[string]*models.Player),
-		Ended:    false,
+		End:    false,
 		DiceType: dicetype,
+		Start: true,
+		Running: true,
+		SnakeAndLadder: g.generateSnakeAndLadder(100),
 	}
 	g.addIntoGame(gameID, userID)
 }
@@ -108,11 +112,12 @@ func (g *GameRepo) CreateandJoinTwoPlayer(userID1 string, userID2 string, gameID
 		Running: true,
 		Turn:     0,
 	    PlayerMap: make(map[string]*models.Player),
-		Ended:    false,
 		DiceType: dicetype,
 		SnakeAndLadder: g.generateSnakeAndLadder(100),
 	}
-	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID1, Index: 0,Location: 0}, &models.Player{UserID: userID2, Index: 1,Location: 0})
+	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID1,Location: 0}, &models.Player{UserID: userID2,Location: 0})
+	g.Games[gameID].PlayerMap[userID1]=g.Games[gameID].Players[0]
+	g.Games[gameID].PlayerMap[userID2]=g.Games[gameID].Players[1]
 	g.Games[gameID].WhooseTurn=g.whooseTurn(gameID)
 	//send whose chance it is as packet
 }
@@ -122,17 +127,18 @@ func (g *GameRepo) CreateandJoinTwoPlayer(userID1 string, userID2 string, gameID
 // }
 
 func (g *GameRepo) addIntoGame(gameID string, userID string) {
-	var sz int = len(g.Games[gameID].Players)
-	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID, Index: sz})
+	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID})
 }
 
 func (g *GameRepo) ifGameExists(gameID string) bool {
+	log.Println("inside game exists")
 	_, ok := g.Games[gameID]
 	return ok
 }
 
 func (g *GameRepo) ifGameEnded(gameID string) bool {
-	return g.Games[gameID].Ended
+	log.Println("inside game ended")
+	return g.Games[gameID].End
 }
 
 func (g *GameRepo) ifUserIsPlayerInGame(gameID string, userID string) bool {
@@ -145,15 +151,14 @@ func (g *GameRepo) ifUserIsPlayerInGame(gameID string, userID string) bool {
 }
 
 func (g *GameRepo) whooseTurn(gameID string) string {
-	k := g.Games[gameID].Turn % 2
-	if k == g.Games[gameID].Players[0].Index {
-		return g.Games[gameID].Players[0].UserID
-	} else {
-		return g.Games[gameID].Players[1].UserID
-	}
+	log.Println("inside whose turn")
+	k := (g.Games[gameID].Turn) % 2
+	return g.Games[gameID].Players[k].UserID
+	
 }
 
 func (g *GameRepo) playTheGame(gameID string, userID string) int {
+	log.Println("play the game")
 	var t int = g.Games[gameID].DiceType
 	var dval int
 	if t == 0 {
@@ -164,6 +169,8 @@ func (g *GameRepo) playTheGame(gameID string, userID string) int {
 		num := []int{1, 3, 5}
 		dval = num[rand.Intn(len(num))]
 	}
+	g.Games[gameID].Turn=(g.Games[gameID].Turn+1)%2
+	g.Games[gameID].WhooseTurn=g.whooseTurn(gameID)
 	currLoc := g.Games[gameID].PlayerMap[userID].Location
 	if currLoc+dval <= 100 {
 		g.Games[gameID].PlayerMap[userID].Location = currLoc + dval
