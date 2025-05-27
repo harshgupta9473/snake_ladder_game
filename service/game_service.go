@@ -69,6 +69,7 @@ func (gs *GameService) gameStatusPlayload(gameID string) *packets.UpdatePayloadG
 	gameStatus.End = games.End
 	gameStatus.WonBy = games.WonBy
 	gameStatus.UserTurn = games.WhooseTurn
+	gameStatus.SnakeAndLadder=games.SnakeAndLadder
 	for _, player := range games.Players {
 		gameStatus.Players = append(gameStatus.Players, packets.Players{UserID: player.UserID, Name: player.Name, Location: player.Location})
 	}

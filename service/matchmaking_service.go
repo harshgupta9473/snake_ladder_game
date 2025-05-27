@@ -34,7 +34,7 @@ func (mm *MatchMakingService)StartMatch(userID string,dicetype int)(bool,*packet
 	}
 	}else{
 		if(mm.waitingUserIDForDiceType2==""){
-
+			mm.waitingUserIDForDiceType2=userID
 		}else{
 			stauts:=mm.GameService.CreateandJoin(mm.waitingUserIDForDiceType2,userID,1)
 			mm.waitingUserIDForDiceType2=""

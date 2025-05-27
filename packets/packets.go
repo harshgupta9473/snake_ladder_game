@@ -30,6 +30,7 @@ type UpdatePayloadGameStatus struct {
 	UserTurn    string `json:"user_turn"`
 	WonBy   string
 	Players []Players   `json:"players"`
+	SnakeAndLadder map[int]int
 }
 
 
