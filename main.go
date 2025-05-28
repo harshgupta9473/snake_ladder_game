@@ -27,7 +27,7 @@ func main() {
 	router.HandleFunc("/playgames",controllers.WebsocketHandler(userService,matchmakingService,gameService))
 
 	s := &http.Server{
-		Addr:         ":8080",
+		Addr:         "0.0.0.0:8080",
 		Handler:      router,
 		IdleTimeout:  120 * time.Second,
 		ReadTimeout:  5 * time.Second,

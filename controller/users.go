@@ -66,11 +66,26 @@ func WebsocketHandler(svc intf.UserServiceIntf, mm intf.MatchMakingServiceIntf, 
 }
 
 func JoinGameHandler(packet *packets.Packet, mm intf.MatchMakingServiceIntf, gs intf.GameServiceIntf) {
+
 	payloadBytes, err := json.Marshal(packet.Payload)
 	if err != nil {
 		fmt.Println("Error marshaling payload:", err)
 		return
 	}
+
+	var temp map[string]interface{}
+	err = json.Unmarshal(payloadBytes, &temp)
+	if err != nil {
+		fmt.Println("Error unmarshaling payload to map:", err)
+		return
+	}
+
+	if _, ok := temp["dice_type"]; !ok {
+		fmt.Println("DiceType is missing in payload")
+		return
+	}
+
+
 
 	var join packets.JoinGame
 	err = json.Unmarshal(payloadBytes, &join)
@@ -89,6 +104,18 @@ func PlayGameHandler(packet *packets.Packet, gs intf.GameServiceIntf) {
 	payloadBytes, err := json.Marshal(packet.Payload)
 	if err != nil {
 		fmt.Println("Error marshaling payload:", err)
+		return
+	}
+
+	var temp map[string]interface{}
+	err = json.Unmarshal(payloadBytes, &temp)
+	if err != nil {
+		fmt.Println("Error unmarshaling payload to map:", err)
+		return
+	}
+
+	if _, ok := temp["game_id"]; !ok {
+		fmt.Println("GameID is missing in payload")
 		return
 	}
 

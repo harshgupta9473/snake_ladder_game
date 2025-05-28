@@ -32,7 +32,6 @@ func NewConnection(conn *websocket.Conn) Connection {
 }
 
 func (ws *WSConnection) readLoop() {
-	defer ws.Close()
 	for {
 		_, msg, err := ws.conn.ReadMessage()
 		if err != nil {
@@ -42,7 +41,7 @@ func (ws *WSConnection) readLoop() {
 		var packet *packets.Packet
 		err = json.Unmarshal(msg, &packet)
 		if err != nil {
-			log.Fatal(err)
+			//
 		}
 
 		ws.readchan <- packet
@@ -50,16 +49,18 @@ func (ws *WSConnection) readLoop() {
 }
 
 func (ws *WSConnection) writeLoop() {
+	defer ws.Close()
 	for {
 		select {
 		case msg := <-ws.writechan:
 			msgBytes, err := json.Marshal(msg)
 			if err != nil {
-				//error
+				log.Println("Error marshalling the data")
+				continue
 			}
 			err = ws.conn.WriteMessage(websocket.TextMessage, msgBytes)
 			if err != nil {
-				// error
+				log.Println("Error sending data")
 				return
 			}
 		case <-ws.quit:

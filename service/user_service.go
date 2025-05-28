@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"snake_ladder/intf"
 	"snake_ladder/packets"
 	"snake_ladder/transport"
@@ -27,8 +28,7 @@ func (s *UserService) Disconnect(userID string) {
 func (s *UserService) SendMessageToUser(userID string, msg *packets.PacketResponse) {
 	user, err := s.UserRepo.GetUser(userID)
 	if err != nil {
-		//error
-
+		log.Fatal("unable to send msg  to user")
 	}
 	user.Conn.WriteMsg(msg)
 }

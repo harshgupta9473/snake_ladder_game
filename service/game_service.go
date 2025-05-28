@@ -21,24 +21,27 @@ func NewGameService(gameRepo intf.GameRepositoryIntf, userServiec intf.UserServi
 	}
 }
 
-func (gs *GameService) CreateGame(userID string, dicetype int) *packets.UpdatePayloadGameStatus {
-	gameID := uuid.New().String()
-	gs.GameRepo.CreateGame(gameID, userID, dicetype)
-	return gs.gameStatusPlayload(gameID)
-}
+// func (gs *GameService) CreateGame(userID string, dicetype int) *packets.UpdatePayloadGameStatus {
+// 	gameID := uuid.New().String()
+// 	gs.GameRepo.CreateGame(gameID, userID, dicetype)
+// 	return gs.gameStatusPlayload(gameID)
+// }
 
-func (gs *GameService) JoinGameByGameID(gameID string, userID string) *packets.UpdatePayloadGameStatus {
-	gs.GameRepo.JoinGameByGameID(gameID, userID)
-	status := gs.gameStatusPlayload(gameID)
-	log.Println(status)
-	return status
-}
+// func (gs *GameService) JoinGameByGameID(gameID string, userID string) *packets.UpdatePayloadGameStatus {
+// 	gs.GameRepo.JoinGameByGameID(gameID, userID)
+// 	status := gs.gameStatusPlayload(gameID)
+// 	log.Println(status)
+// 	return status
+// }
 
 func (gs *GameService) PlayTurn(gameID string, userID string) *packets.UpdatePayloadGameStatus {
-	gs.GameRepo.PlayTurn(gameID, userID)
+	played:=gs.GameRepo.PlayTurn(gameID, userID)
 	status := gs.gameStatusPlayload(gameID)
 	log.Println(status)
-	return status
+	if(played){
+		return status
+	}
+	return nil
 }
 
 func (gs *GameService) BroadCastGameUpdate(gameID string, payload interface{}, packet_type string) {
@@ -57,8 +60,6 @@ func (gs *GameService) CreateandJoin(userID1 string, userID2 string, dicetype in
 	return gameStatus
 }
 
-// JoinGameByGameID(string,string)
-// 	PlayTurn(string,string)
 
 func (gs *GameService) gameStatusPlayload(gameID string) *packets.UpdatePayloadGameStatus {
 	games := gs.GameRepo.GetGame(gameID)

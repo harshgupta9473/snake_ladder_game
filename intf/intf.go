@@ -19,16 +19,12 @@ type UserServiceIntf interface {
 }
 
 type GameRepositoryIntf interface {
-	CreateGame(gameID string, userID string, dicetype int)
-	JoinGameByGameID(gameID string, userID string)
-	PlayTurn(gameID string, userID string)
+	PlayTurn(gameID string, userID string)bool
 	GetGame(gameID string) *models.Game
 	CreateandJoinTwoPlayer(userID1 string, userID2 string, gameID string, dicetype int)
 }
 
 type GameServiceIntf interface {
-	CreateGame(userID string, dicetype int)*packets.UpdatePayloadGameStatus
-	JoinGameByGameID(gameID string, userID string)*packets.UpdatePayloadGameStatus
 	PlayTurn(gameID string, userID string) *packets.UpdatePayloadGameStatus
 	CreateandJoin(userID1 string, userID2 string, dicetype int) *packets.UpdatePayloadGameStatus
 	BroadCastGameUpdate(gameID string, payload interface{}, packet_type string) 

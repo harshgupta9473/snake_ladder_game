@@ -12,12 +12,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-type GameRepository interface {
-	CreateGame(string, string, int)
-	JoinGameByGameID(string, string)
-	PlayTurn(string, string)
-	// LeaveGame()
-}
+
 
 type GameRepo struct {
 	Games map[string]*models.Game
@@ -31,20 +26,20 @@ func NewGameRepo() intf.GameRepositoryIntf {
 	}
 }
 
-func (g *GameRepo) CreateGame(gameID string, userID string, dicetype int) {
-	g.Games[gameID] = &models.Game{
-		ID:       gameID,
-		Players:  []*models.Player{},
-		Turn:     0,
-		PlayerMap: make(map[string]*models.Player),
-		End:    false,
-		DiceType: dicetype,
-		Start: true,
-		Running: true,
-		SnakeAndLadder: g.generateSnakeAndLadder(100),
-	}
-	g.addIntoGame(gameID, userID)
-}
+// func (g *GameRepo) CreateGame(gameID string, userID string, dicetype int) {
+// 	g.Games[gameID] = &models.Game{
+// 		ID:       gameID,
+// 		Players:  []*models.Player{},
+// 		Turn:     0,
+// 		PlayerMap: make(map[string]*models.Player),
+// 		End:    false,
+// 		DiceType: dicetype,
+// 		Start: true,
+// 		Running: true,
+// 		SnakeAndLadder: g.generateSnakeAndLadder(100),
+// 	}
+// 	g.addIntoGame(gameID, userID)
+// }
 
 func (g *GameRepo) JoinGameByGameID(gameID string, userID string) {
 	// check if game exists and if ended and if already joined
@@ -69,34 +64,36 @@ func (g *GameRepo) JoinGameByGameID(gameID string, userID string) {
 	g.addIntoGame(gameID, userID)
 }
 
-func (g *GameRepo) PlayTurn(gameID string, userID string) {
+func (g *GameRepo) PlayTurn(gameID string, userID string)(bool) {
 	// check if game is still live
 	if !g.ifGameExists(gameID) {
-		//
-		return
+		log.Println("Game does not exists")
+		return false
+	}
+
+	if(!g.ifUserIsPlayerInGame(gameID,userID)){
+		return false
 	}
 
 	if g.ifGameEnded(gameID) {
-		//
-		return
+		log.Println("Game Ended")
+		return  true
 	}
-	// if(g.ifUserIsPlayerInGame(gameID,userID)){
-	// 	//already joined
-	// 	return
-	// }
 
-	// check whoose turn is this
-	// only play the the turn when its the turn of the requested player
+	
 	if g.whooseTurn(gameID) != userID {
-		// not allowed
-		return
+		log.Println("Its not your turn")
+		return true
 	}
 	loc := g.playTheGame(gameID, userID)
 	if loc == 100 {
-		// player won end the game, return to everywon who won
+		g.Games[gameID].WonBy=userID
+		g.Games[gameID].End=true
+		g.Games[gameID].Running=false
+		return true
 	}
 
-	// then send the present state to everyone // brodcast
+	return true
 }
 
 func (g *GameRepo) GetGame(gameID string) *models.Game {
@@ -119,12 +116,11 @@ func (g *GameRepo) CreateandJoinTwoPlayer(userID1 string, userID2 string, gameID
 	g.Games[gameID].PlayerMap[userID1]=g.Games[gameID].Players[0]
 	g.Games[gameID].PlayerMap[userID2]=g.Games[gameID].Players[1]
 	g.Games[gameID].WhooseTurn=g.whooseTurn(gameID)
-	//send whose chance it is as packet
 }
 
-// func(g *GameRepo)LeaveGame(gameID string,userID string){
-
-// }
+func(g *GameRepo)LeaveGame(gameID string,userID string){
+	g.Games[gameID].End=true
+}
 
 func (g *GameRepo) addIntoGame(gameID string, userID string) {
 	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID})
