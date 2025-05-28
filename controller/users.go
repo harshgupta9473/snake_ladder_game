@@ -45,6 +45,10 @@ func WebsocketHandler(svc intf.UserServiceIntf, mm intf.MatchMakingServiceIntf, 
 
 		svc.Connect(req.ID, req.Name, conn)
 		conn.Start()
+		status:=mm.AnyPreviousMatch(userID)
+		if(status!=nil){
+			gs.BroadCastGameUpdate(status.GameID,status,"game_played")
+		}
 
 		go func() {
 
@@ -84,8 +88,6 @@ func JoinGameHandler(packet *packets.Packet, mm intf.MatchMakingServiceIntf, gs 
 		fmt.Println("DiceType is missing in payload")
 		return
 	}
-
-
 
 	var join packets.JoinGame
 	err = json.Unmarshal(payloadBytes, &join)

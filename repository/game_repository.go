@@ -50,7 +50,8 @@ func (g *GameRepo) JoinGameByGameID(gameID string, userID string)bool {
 	}
 
 	// join
-	g.addIntoGame(gameID, userID)
+	// g.addIntoGame(gameID, userID)
+	g.Games[gameID].PlayerMap[userID].Connected=true
 	return true
 }
 
@@ -90,7 +91,7 @@ func (g *GameRepo) GetGame(gameID string) *models.Game {
 	return g.Games[gameID]
 }
 
-func (g *GameRepo) CreateandJoinTwoPlayer(userID1 string, userID2 string, gameID string, dicetype int,disconnect1 *chan struct{},disconnect2 *chan struct{}) {
+func (g *GameRepo) CreateandJoinTwoPlayer(userID1 string, userID2 string, gameID string, dicetype int) {
 	g.Games[gameID] = &models.Game{
 		ID:             gameID,
 		Players:        []*models.Player{},
@@ -102,7 +103,7 @@ func (g *GameRepo) CreateandJoinTwoPlayer(userID1 string, userID2 string, gameID
 		DiceType:       dicetype,
 		SnakeAndLadder: g.generateSnakeAndLadder(100),
 	}
-	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID1, Location: 0,Disconnected: disconnect1}, &models.Player{UserID: userID2, Location: 0,Disconnected: disconnect2})
+	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID1, Location: 0,Connected: true}, &models.Player{UserID: userID2, Location: 0,Connected: true})
 	g.Games[gameID].PlayerMap[userID1] = g.Games[gameID].Players[0]
 	g.Games[gameID].PlayerMap[userID2] = g.Games[gameID].Players[1]
 	g.Games[gameID].WhooseTurn = g.whooseTurn(gameID)
@@ -110,7 +111,9 @@ func (g *GameRepo) CreateandJoinTwoPlayer(userID1 string, userID2 string, gameID
 	g.UserMap[userID2]=gameID
 }
 
-func (g *GameRepo) LeaveGame(gameID string, userID string) {
+func (g *GameRepo) LeaveGame(gameID string) {
+	g.Games[gameID].Running=false
+	g.Games[gameID].WonBy="draw"
 	g.Games[gameID].End = true
 }
 

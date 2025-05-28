@@ -13,7 +13,7 @@ type Connection interface {
 	ReadMsg() <-chan *packets.Packet
 	WriteMsg(msg *packets.PacketResponse)
 	Close() error
-	ReadDisconnect() *chan struct{}
+	ReadDisconnect() chan struct{}
 }
 
 type WSConnection struct {
@@ -98,6 +98,6 @@ func (ws *WSConnection) Close() error {
 	return ws.conn.Close()
 }
 
-func (ws *WSConnection) ReadDisconnect() *chan struct{} {
-	return &ws.disconnected
+func (ws *WSConnection) ReadDisconnect() chan struct{} {
+	return ws.disconnected
 }
