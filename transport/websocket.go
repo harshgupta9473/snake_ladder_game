@@ -13,32 +13,37 @@ type Connection interface {
 	ReadMsg() <-chan *packets.Packet
 	WriteMsg(msg *packets.PacketResponse)
 	Close() error
+	ReadDisconnect() *chan struct{}
 }
 
 type WSConnection struct {
-	conn      *websocket.Conn
-	readchan  chan *packets.Packet
-	writechan chan *packets.PacketResponse
-	quit      chan struct{}
+	conn         *websocket.Conn
+	readchan     chan *packets.Packet
+	writechan    chan *packets.PacketResponse
+	quit         chan struct{}
+	disconnected chan struct{}
 }
 
 func NewConnection(conn *websocket.Conn) Connection {
 	return &WSConnection{
-		conn:      conn,
-		readchan:  make(chan *packets.Packet),
-		writechan: make(chan *packets.PacketResponse),
-		quit:      make(chan struct{}),
+		conn:         conn,
+		readchan:     make(chan *packets.Packet),
+		writechan:    make(chan *packets.PacketResponse),
+		quit:         make(chan struct{}),
+		disconnected: make(chan struct{}),
 	}
 }
 
 func (ws *WSConnection) readLoop() {
+	defer ws.Close()
 	for {
 		_, msg, err := ws.conn.ReadMessage()
 		if err != nil {
 			log.Println("read error:", err)
-			break
+			close(ws.disconnected)
+			return
 		}
-		if len(msg)==0{
+		if len(msg) == 0 {
 			log.Println("empty message")
 			continue
 		}
@@ -65,6 +70,7 @@ func (ws *WSConnection) writeLoop() {
 			err = ws.conn.WriteMessage(websocket.TextMessage, msgBytes)
 			if err != nil {
 				log.Println("Error sending data")
+
 				return
 			}
 		case <-ws.quit:
@@ -90,4 +96,8 @@ func (ws *WSConnection) WriteMsg(msg *packets.PacketResponse) {
 func (ws *WSConnection) Close() error {
 	close(ws.quit)
 	return ws.conn.Close()
+}
+
+func (ws *WSConnection) ReadDisconnect() *chan struct{} {
+	return &ws.disconnected
 }

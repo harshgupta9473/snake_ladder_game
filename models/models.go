@@ -17,6 +17,7 @@ type Player struct {
 	UserID   string
 	Location int
 	Name     string
+	Disconnected *chan struct{}
 }
 
 type Game struct {

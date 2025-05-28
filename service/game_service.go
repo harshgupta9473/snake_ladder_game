@@ -35,8 +35,8 @@ func NewGameService(gameRepo intf.GameRepositoryIntf, userServiec intf.UserServi
 // }
 
 func (gs *GameService) PlayTurn(gameID string, userID string) *packets.UpdatePayloadGameStatus {
-	played:=gs.GameRepo.PlayTurn(gameID, userID)
-	if(!played){
+	played := gs.GameRepo.PlayTurn(gameID, userID)
+	if !played {
 		return nil
 	}
 	status := gs.gameStatusPlayload(gameID)
@@ -55,11 +55,17 @@ func (gs *GameService) BroadCastGameUpdate(gameID string, payload interface{}, p
 
 func (gs *GameService) CreateandJoin(userID1 string, userID2 string, dicetype int) *packets.UpdatePayloadGameStatus {
 	gameID := uuid.New().String()
-	gs.GameRepo.CreateandJoinTwoPlayer(userID1, userID2, gameID, dicetype)
+	conn1,err1:=gs.UserService.GetUserConn(userID1)
+	conn2,err2:=gs.UserService.GetUserConn(userID2)
+	if err1!=nil||err2!=nil{
+		return nil
+	}
+
+	
+	gs.GameRepo.CreateandJoinTwoPlayer(userID1, userID2, gameID, dicetype,conn1.ReadDisconnect(),conn2.ReadDisconnect())
 	gameStatus := gs.gameStatusPlayload(gameID)
 	return gameStatus
 }
-
 
 func (gs *GameService) gameStatusPlayload(gameID string) *packets.UpdatePayloadGameStatus {
 	games := gs.GameRepo.GetGame(gameID)
@@ -70,9 +76,27 @@ func (gs *GameService) gameStatusPlayload(gameID string) *packets.UpdatePayloadG
 	gameStatus.End = games.End
 	gameStatus.WonBy = games.WonBy
 	gameStatus.UserTurn = games.WhooseTurn
-	gameStatus.SnakeAndLadder=games.SnakeAndLadder
+	gameStatus.SnakeAndLadder = games.SnakeAndLadder
 	for _, player := range games.Players {
 		gameStatus.Players = append(gameStatus.Players, packets.Players{UserID: player.UserID, Name: player.Name, Location: player.Location})
 	}
 	return &gameStatus
 }
+
+func (gs *GameService) EndGame(gameID string) {
+
+}
+
+func (gs *GameService) IfUserIsAlreadyPartOfSomeGameJoinHimThere(userID string) *packets.UpdatePayloadGameStatus {
+	ok, gameID := gs.GameRepo.GetGameByUserID(userID)
+	if !ok {
+		return nil
+	}
+
+	gs.GameRepo.JoinGameByGameID(gameID, userID)
+	gameStatus := gs.gameStatusPlayload(gameID)
+	return gameStatus
+}
+
+
+

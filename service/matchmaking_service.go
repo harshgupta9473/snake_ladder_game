@@ -23,6 +23,10 @@ func NewMatchMakingService(gs intf.GameServiceIntf) *MatchMakingService {
 }
 
 func (mm *MatchMakingService) StartMatch(userID string, dicetype int) (bool, *packets.UpdatePayloadGameStatus) {
+	status:=mm.GameService.IfUserIsAlreadyPartOfSomeGameJoinHimThere(userID)
+	if(status!=nil){
+		return true,status
+	}
 	if dicetype == 0 {
 		mm.mu1.Lock()
 		defer mm.mu1.Unlock()

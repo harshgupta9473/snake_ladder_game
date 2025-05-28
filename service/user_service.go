@@ -28,7 +28,14 @@ func (s *UserService) Disconnect(userID string) {
 func (s *UserService) SendMessageToUser(userID string, msg *packets.PacketResponse) {
 	user, err := s.UserRepo.GetUser(userID)
 	if err != nil {
-		log.Fatal("unable to send msg  to user")
+		log.Fatal("unable to send msg  to user",err)
 	}
 	user.Conn.WriteMsg(msg)
+}
+func (s *UserService)GetUserConn(userID string)(transport.Connection,error){
+	user,err:=s.UserRepo.GetUser(userID)
+	if err!=nil{
+		return nil,err
+	}
+	return user.Conn,nil
 }
