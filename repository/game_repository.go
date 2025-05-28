@@ -136,7 +136,6 @@ func (g *GameRepo) whooseTurn(gameID string) string {
 	log.Println("inside whose turn")
 	k := (g.Games[gameID].Turn) % 2
 	return g.Games[gameID].Players[k].UserID
-	
 }
 
 func (g *GameRepo) playTheGame(gameID string, userID string) int {

@@ -40,7 +40,7 @@ func (ws *WSConnection) readLoop() {
 		_, msg, err := ws.conn.ReadMessage()
 		if err != nil {
 			log.Println("read error:", err)
-			close(ws.disconnected)
+			ws.disconnected <- struct{}{}
 			return
 		}
 		if len(msg) == 0 {
@@ -70,7 +70,7 @@ func (ws *WSConnection) writeLoop() {
 			err = ws.conn.WriteMessage(websocket.TextMessage, msgBytes)
 			if err != nil {
 				log.Println("Error sending data")
-
+				ws.disconnected <- struct{}{}
 				return
 			}
 		case <-ws.quit:
