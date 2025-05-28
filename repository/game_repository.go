@@ -22,35 +22,36 @@ func NewGameRepo() intf.GameRepositoryIntf {
 	}
 }
 
-// func (g *GameRepo) CreateGame(gameID string, userID string, dicetype int) {
-// 	g.Games[gameID] = &models.Game{
-// 		ID:       gameID,
-// 		Players:  []*models.Player{},
-// 		Turn:     0,
-// 		PlayerMap: make(map[string]*models.Player),
-// 		End:    false,
-// 		DiceType: dicetype,
-// 		Start: true,
-// 		Running: true,
-// 		SnakeAndLadder: g.generateSnakeAndLadder(100),
-// 	}
-// 	g.addIntoGame(gameID, userID)
-// }
+
+func (g *GameRepo) CreateandJoinTwoPlayer(userID1 string, userID2 string, gameID string, dicetype int) {
+	g.Games[gameID] = &models.Game{
+		ID:             gameID,
+		Players:        []*models.Player{},
+		Start:          true,
+		End:            false,
+		Running:        true,
+		Turn:           0,
+		PlayerMap:      make(map[string]*models.Player),
+		DiceType:       dicetype,
+		SnakeAndLadder: g.generateSnakeAndLadder(100),
+	}
+	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID1, Location: 0,Connected: true}, &models.Player{UserID: userID2, Location: 0,Connected: true})
+	g.Games[gameID].PlayerMap[userID1] = g.Games[gameID].Players[0]
+	g.Games[gameID].PlayerMap[userID2] = g.Games[gameID].Players[1]
+	g.Games[gameID].WhooseTurn = g.whooseTurn(gameID)
+	g.UserMap[userID1]=gameID
+	g.UserMap[userID2]=gameID
+}
+
 
 func (g *GameRepo) JoinGameByGameID(gameID string, userID string)bool {
-	// check if game exists and if ended and if already joined
 	if !g.ifGameExists(gameID) {
-		//
 		return false
 	}
 
 	if g.ifGameEnded(gameID) {
-		//
 		return false
 	}
-
-	// join
-	// g.addIntoGame(gameID, userID)
 	g.Games[gameID].PlayerMap[userID].Connected=true
 	return true
 }
@@ -91,26 +92,6 @@ func (g *GameRepo) GetGame(gameID string) *models.Game {
 	return g.Games[gameID]
 }
 
-func (g *GameRepo) CreateandJoinTwoPlayer(userID1 string, userID2 string, gameID string, dicetype int) {
-	g.Games[gameID] = &models.Game{
-		ID:             gameID,
-		Players:        []*models.Player{},
-		Start:          true,
-		End:            false,
-		Running:        true,
-		Turn:           0,
-		PlayerMap:      make(map[string]*models.Player),
-		DiceType:       dicetype,
-		SnakeAndLadder: g.generateSnakeAndLadder(100),
-	}
-	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID1, Location: 0,Connected: true}, &models.Player{UserID: userID2, Location: 0,Connected: true})
-	g.Games[gameID].PlayerMap[userID1] = g.Games[gameID].Players[0]
-	g.Games[gameID].PlayerMap[userID2] = g.Games[gameID].Players[1]
-	g.Games[gameID].WhooseTurn = g.whooseTurn(gameID)
-	g.UserMap[userID1]=gameID
-	g.UserMap[userID2]=gameID
-}
-
 func (g *GameRepo) LeaveGame(gameID string) {
 	g.Games[gameID].Running=false
 	g.Games[gameID].WonBy="draw"
@@ -124,6 +105,8 @@ func (g *GameRepo)GetGameByUserID(useID string)(bool,string){
 	}
 	return true,gameID
 }
+
+
 
 func (g *GameRepo) addIntoGame(gameID string, userID string) {
 	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID})
