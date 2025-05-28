@@ -31,6 +31,9 @@ func (mm *MatchMakingService) StartMatch(userID string, dicetype int) (bool, *pa
 			return false, nil
 			//return waiting for more player to join
 		} else {
+			if(mm.waitingUserIDForDiceType1==userID){
+				return false,nil
+			}
 			status := mm.GameService.CreateandJoin(mm.waitingUserIDForDiceType1, userID, 0)
 			mm.waitingUserIDForDiceType1 = ""
 			return true, status
@@ -41,6 +44,9 @@ func (mm *MatchMakingService) StartMatch(userID string, dicetype int) (bool, *pa
 		if mm.waitingUserIDForDiceType2 == "" {
 			mm.waitingUserIDForDiceType2 = userID
 		} else {
+			if(mm.waitingUserIDForDiceType2==userID){
+				return false,nil
+			}
 			stauts := mm.GameService.CreateandJoin(mm.waitingUserIDForDiceType2, userID, 1)
 			mm.waitingUserIDForDiceType2 = ""
 			return true, stauts

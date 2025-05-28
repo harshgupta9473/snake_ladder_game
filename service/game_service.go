@@ -36,12 +36,12 @@ func NewGameService(gameRepo intf.GameRepositoryIntf, userServiec intf.UserServi
 
 func (gs *GameService) PlayTurn(gameID string, userID string) *packets.UpdatePayloadGameStatus {
 	played:=gs.GameRepo.PlayTurn(gameID, userID)
+	if(!played){
+		return nil
+	}
 	status := gs.gameStatusPlayload(gameID)
 	log.Println(status)
-	if(played){
-		return status
-	}
-	return nil
+	return status
 }
 
 func (gs *GameService) BroadCastGameUpdate(gameID string, payload interface{}, packet_type string) {

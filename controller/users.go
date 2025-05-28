@@ -127,6 +127,9 @@ func PlayGameHandler(packet *packets.Packet, gs intf.GameServiceIntf) {
 	}
 
 	status := gs.PlayTurn(playgame.GameID, packet.Header.UserId)
+	if(status==nil){
+		return
+	}
 	gs.BroadCastGameUpdate(status.GameID, status, "game_played")
 }
 

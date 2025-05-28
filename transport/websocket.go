@@ -35,13 +35,18 @@ func (ws *WSConnection) readLoop() {
 	for {
 		_, msg, err := ws.conn.ReadMessage()
 		if err != nil {
-			//error
+			log.Println("read error:", err)
 			break
+		}
+		if len(msg)==0{
+			log.Println("empty message")
+			continue
 		}
 		var packet *packets.Packet
 		err = json.Unmarshal(msg, &packet)
 		if err != nil {
-			//
+			log.Println("invalid json packet", err)
+			continue
 		}
 
 		ws.readchan <- packet
@@ -49,7 +54,6 @@ func (ws *WSConnection) readLoop() {
 }
 
 func (ws *WSConnection) writeLoop() {
-	defer ws.Close()
 	for {
 		select {
 		case msg := <-ws.writechan:
@@ -64,6 +68,7 @@ func (ws *WSConnection) writeLoop() {
 				return
 			}
 		case <-ws.quit:
+			log.Println("Quit signal received, closing write loop")
 			return
 		}
 	}
