@@ -25,15 +25,7 @@ func NewGameService(gameRepo intf.GameRepositoryIntf, userServiec intf.UserServi
 
 func (gs *GameService) CreateandJoin(userID1 string, userID2 string, dicetype int) *packets.UpdatePayloadGameStatus {
 	gameID := uuid.New().String()
-	conn1, err1 := gs.UserService.GetUserConn(userID1)
-	conn2, err2 := gs.UserService.GetUserConn(userID2)
-	if err1 != nil || err2 != nil {
-		return nil
-	}
-
 	gs.GameRepo.CreateandJoinTwoPlayer(userID1, userID2, gameID, dicetype)
-	go gs.waitAndCheckConnection(gameID ,userID1,conn1.ReadDisconnect())
-	go gs.waitAndCheckConnection(gameID,userID2,conn2.ReadDisconnect())
 	gameStatus := gs.gameStatusPlayload(gameID)
 	return gameStatus
 }
@@ -88,19 +80,21 @@ func (gs *GameService) EndGame(gameID string)*packets.UpdatePayloadGameStatus {
 
 
 
-func (gs *GameService) waitAndCheckConnection(gameID string, userID string,disconnect chan struct{}) {
-	for{
-		select {
-	case <-disconnect:
-		log.Println("disconnection signal received for ",userID)
+func (gs *GameService) WaitAndCheckConnection(userID string) bool {
+	ok,gameID:=gs.GameRepo.GetGameByUserID(userID)
+	if !ok{
+		return false
+	}
+	if(!gs.GameRepo.GetGame(gameID).PlayerMap[userID].Connected){
+		return false
+	}
 		gs.GameRepo.GetGame(gameID).PlayerMap[userID].Connected=false
 		time.Sleep(30*time.Second)
 		if(!gs.GameRepo.GetGame(gameID).PlayerMap[userID].Connected){
 			gs.EndGame(gameID)
-			return
+			return true
 		}
-	}
-}
+		return true
 }
 
 

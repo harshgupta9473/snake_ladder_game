@@ -59,6 +59,7 @@ func (ws *WSConnection) readLoop() {
 }
 
 func (ws *WSConnection) writeLoop() {
+	defer ws.conn.Close()
 	for {
 		select {
 		case msg := <-ws.writechan:

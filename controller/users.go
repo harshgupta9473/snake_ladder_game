@@ -66,6 +66,16 @@ func WebsocketHandler(svc intf.UserServiceIntf, mm intf.MatchMakingServiceIntf, 
 				}
 			}
 		}()
+
+		go func(userID string){
+			for{
+				select{
+				case <-conn.ReadDisconnect():
+					log.Println("disconnection signal received for ",userID)
+					go WaitForReconnectionHandler(userID,gs)
+				}
+			}
+		}(userID )
 	}
 }
 
@@ -135,6 +145,12 @@ func PlayGameHandler(packet *packets.Packet, gs intf.GameServiceIntf) {
 	gs.BroadCastGameUpdate(status.GameID, status, "game_played")
 }
 
+func WaitForReconnectionHandler(userID string,gs intf.GameServiceIntf){
+	ok:=gs.WaitAndCheckConnection(userID)
+	if ok{
+		log.Println("reconnected")
+	}
+}
 
 
 // {

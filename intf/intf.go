@@ -34,6 +34,7 @@ type GameServiceIntf interface {
 	BroadCastGameUpdate(gameID string, payload interface{}, packet_type string)
 	IfUserIsAlreadyPartOfSomeGameJoinHimThere(userID string) *packets.UpdatePayloadGameStatus
 	EndGame(gameID string)*packets.UpdatePayloadGameStatus
+	WaitAndCheckConnection(userID string) bool
 }
 
 type MatchMakingServiceIntf interface {
