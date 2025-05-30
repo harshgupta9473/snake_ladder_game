@@ -72,7 +72,7 @@ func WebsocketHandler(svc intf.UserServiceIntf, mm intf.MatchMakingServiceIntf, 
 				select{
 				case <-conn.ReadDisconnect():
 					log.Println("disconnection signal received for ",userID)
-					go WaitForReconnectionHandler(userID,gs)
+					 WaitForReconnectionHandler(userID,gs)
 				}
 			}
 		}(userID )
