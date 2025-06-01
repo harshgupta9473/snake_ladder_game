@@ -11,51 +11,49 @@ import (
 type GameRepo struct {
 	Games map[string]*models.Game
 	Board []int
+	UserMap map[string]string
 }
 
 func NewGameRepo() intf.GameRepositoryIntf {
 	return &GameRepo{
 		Games: make(map[string]*models.Game),
 		Board: createBoard(100),
+		UserMap: make(map[string]string),
 	}
 }
 
-// func (g *GameRepo) CreateGame(gameID string, userID string, dicetype int) {
-// 	g.Games[gameID] = &models.Game{
-// 		ID:       gameID,
-// 		Players:  []*models.Player{},
-// 		Turn:     0,
-// 		PlayerMap: make(map[string]*models.Player),
-// 		End:    false,
-// 		DiceType: dicetype,
-// 		Start: true,
-// 		Running: true,
-// 		SnakeAndLadder: g.generateSnakeAndLadder(100),
-// 	}
-// 	g.addIntoGame(gameID, userID)
-// }
 
-func (g *GameRepo) JoinGameByGameID(gameID string, userID string) {
-	// check if game exists and if ended and if already joined
+func (g *GameRepo) CreateandJoinTwoPlayer(userID1 string, userID2 string, gameID string, dicetype int) {
+	g.Games[gameID] = &models.Game{
+		ID:             gameID,
+		Players:        []*models.Player{},
+		Start:          true,
+		End:            false,
+		Running:        true,
+		Turn:           0,
+		PlayerMap:      make(map[string]*models.Player),
+		DiceType:       dicetype,
+		SnakeAndLadder: g.generateSnakeAndLadder(100),
+	}
+	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID1, Location: 0,Connected: true}, &models.Player{UserID: userID2, Location: 0,Connected: true})
+	g.Games[gameID].PlayerMap[userID1] = g.Games[gameID].Players[0]
+	g.Games[gameID].PlayerMap[userID2] = g.Games[gameID].Players[1]
+	g.Games[gameID].WhooseTurn = g.whooseTurn(gameID)
+	g.UserMap[userID1]=gameID
+	g.UserMap[userID2]=gameID
+}
+
+
+func (g *GameRepo) JoinGameByGameID(gameID string, userID string)bool {
 	if !g.ifGameExists(gameID) {
-		//
-		return
+		return false
 	}
 
 	if g.ifGameEnded(gameID) {
-		//
-		return
+		return false
 	}
-
-	if g.ifUserIsPlayerInGame(gameID, userID) {
-		//already joined
-		return
-	}
-
-	// some code
-
-	// join
-	g.addIntoGame(gameID, userID)
+	g.Games[gameID].PlayerMap[userID].Connected=true
+	return true
 }
 
 func (g *GameRepo) PlayTurn(gameID string, userID string) bool {
@@ -94,27 +92,21 @@ func (g *GameRepo) GetGame(gameID string) *models.Game {
 	return g.Games[gameID]
 }
 
-func (g *GameRepo) CreateandJoinTwoPlayer(userID1 string, userID2 string, gameID string, dicetype int) {
-	g.Games[gameID] = &models.Game{
-		ID:             gameID,
-		Players:        []*models.Player{},
-		Start:          true,
-		End:            false,
-		Running:        true,
-		Turn:           0,
-		PlayerMap:      make(map[string]*models.Player),
-		DiceType:       dicetype,
-		SnakeAndLadder: g.generateSnakeAndLadder(100),
-	}
-	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID1, Location: 0}, &models.Player{UserID: userID2, Location: 0})
-	g.Games[gameID].PlayerMap[userID1] = g.Games[gameID].Players[0]
-	g.Games[gameID].PlayerMap[userID2] = g.Games[gameID].Players[1]
-	g.Games[gameID].WhooseTurn = g.whooseTurn(gameID)
-}
-
-func (g *GameRepo) LeaveGame(gameID string, userID string) {
+func (g *GameRepo) LeaveGame(gameID string) {
+	g.Games[gameID].Running=false
+	g.Games[gameID].WonBy="draw"
 	g.Games[gameID].End = true
 }
+
+func (g *GameRepo)GetGameByUserID(useID string)(bool,string){
+	 gameID,ok:=g.UserMap[useID]
+	 if !ok{
+		return ok,""
+	}
+	return true,gameID
+}
+
+
 
 func (g *GameRepo) addIntoGame(gameID string, userID string) {
 	g.Games[gameID].Players = append(g.Games[gameID].Players, &models.Player{UserID: userID})
@@ -144,7 +136,6 @@ func (g *GameRepo) whooseTurn(gameID string) string {
 	log.Println("inside whose turn")
 	k := (g.Games[gameID].Turn) % 2
 	return g.Games[gameID].Players[k].UserID
-	
 }
 
 func (g *GameRepo) playTheGame(gameID string, userID string) int {
@@ -195,3 +186,4 @@ func createBoard(n int) []int {
 	}
 	return nums
 }
+

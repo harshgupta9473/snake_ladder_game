@@ -45,6 +45,10 @@ func WebsocketHandler(svc intf.UserServiceIntf, mm intf.MatchMakingServiceIntf, 
 
 		svc.Connect(req.ID, req.Name, conn)
 		conn.Start()
+		status:=mm.AnyPreviousMatch(userID)
+		if(status!=nil){
+			gs.BroadCastGameUpdate(status.GameID,status,"game_played")
+		}
 
 		go func() {
 
@@ -62,6 +66,16 @@ func WebsocketHandler(svc intf.UserServiceIntf, mm intf.MatchMakingServiceIntf, 
 				}
 			}
 		}()
+
+		go func(userID string){
+			for{
+				select{
+				case <-conn.ReadDisconnect():
+					log.Println("disconnection signal received for ",userID)
+					 WaitForReconnectionHandler(userID,gs)
+				}
+			}
+		}(userID )
 	}
 }
 
@@ -84,8 +98,6 @@ func JoinGameHandler(packet *packets.Packet, mm intf.MatchMakingServiceIntf, gs 
 		fmt.Println("DiceType is missing in payload")
 		return
 	}
-
-
 
 	var join packets.JoinGame
 	err = json.Unmarshal(payloadBytes, &join)
@@ -133,6 +145,12 @@ func PlayGameHandler(packet *packets.Packet, gs intf.GameServiceIntf) {
 	gs.BroadCastGameUpdate(status.GameID, status, "game_played")
 }
 
+func WaitForReconnectionHandler(userID string,gs intf.GameServiceIntf){
+	ok:=gs.WaitAndCheckConnection(userID)
+	if ok{
+		log.Println("reconnected")
+	}
+}
 
 
 // {

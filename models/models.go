@@ -17,6 +17,7 @@ type Player struct {
 	UserID   string
 	Location int
 	Name     string
+	Connected bool
 }
 
 type Game struct {
