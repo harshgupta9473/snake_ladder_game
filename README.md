@@ -1,6 +1,6 @@
 # Snake And Ladder Game 
 Built in golang following  clean layerd architecture.
-(The most updated branch is harshreconnnection2)
+
 
 This Game is multiplayer game (currently two player) , and it is played in realtime using websockets and packet based backend. Routes are decided based on packet type.
 User can request to join a game and there is matchmaking service which joins two players who have opted for the same game type and starts the game, it is turn based game and the changes are broadcasted for every player of that game.
